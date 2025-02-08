@@ -10,3 +10,14 @@ second_btn = [InlineKeyboardButton(text="Второй вариант", callback_
 def main_kbd():
     return InlineKeyboardMarkup(inline_keyboard=[first_btn,
                                                  second_btn])
+
+
+return_to_main_btn = [InlineKeyboardButton(text="return to main menu",
+                                           callback_data="#main_menu_cb#")]
+
+
+
+
+def return_to_main_kbd():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        return_to_main_btn])

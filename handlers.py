@@ -13,7 +13,7 @@ import io
 
 from loguru import logger
 
-from inline_keyboard import main_kbd, FIRST, SECOND
+from inline_keyboard import main_kbd, FIRST, SECOND, return_to_main_kbd
 from qr_generator import generate
 from states import Menus
 from qr_art_genegator import art_generator
@@ -31,7 +31,8 @@ async def destiny(msg: Message, state: FSMContext, bot: Bot):
 @router_main.callback_query(Menus.destiny)
 async def prompt(query: CallbackQuery, state: FSMContext, bot: Bot):
     await state.update_data(choice=query.data)
-    await bot.send_message(query.from_user.id, "Enter data for encoding")
+    await bot.send_message(query.from_user.id, "Enter data for encoding",
+                           reply_markup=return_to_main_kbd())
     await state.set_state(Menus.prompt)
 
 
@@ -39,7 +40,8 @@ async def prompt(query: CallbackQuery, state: FSMContext, bot: Bot):
 async def image(msg: Message, state: FSMContext, bot: Bot):
     await state.update_data(prompt=msg.text)
     logger.info(msg.text)
-    await bot.send_message(msg.chat.id, "Send photo for stylization")
+    await bot.send_message(msg.chat.id, "Send photo for stylization",
+                           reply_markup=return_to_main_kbd())
     data = await state.get_data()
     choice = data.get("choice")
     if choice == FIRST:
@@ -91,7 +93,9 @@ async def stylized_qr(msg: Message, state: FSMContext, bot: Bot):
 
     input_file = BufferedInputFile(image_stream.getvalue(), filename="image.png")
 
-    await bot.send_photo(msg.from_user.id, input_file, caption=data if data else "qr is unreadable")
+    await bot.send_photo(msg.from_user.id, input_file, caption=data if data else "qr is "
+                                                                                 "unreadable",
+                         reply_markup=return_to_main_kbd())
     await state.clear()
 
 
@@ -110,5 +114,13 @@ async def art_qr(msg: Message, state: FSMContext, bot: Bot):
     art_generator(data.get("prompt"), img)
     logger.info("image has been generated")
     photo = FSInputFile("img.png")
-    await bot.send_photo(msg.from_user.id, photo)
+    await bot.send_photo(msg.from_user.id, photo, reply_markup=return_to_main_kbd())
     os.remove("img.png")
+
+
+@router_main.callback_query(F.data == "#main_menu_cb#",
+                            StateFilter(any_state))
+async def return_to_main_menu(call: CallbackQuery, state: FSMContext, bot: Bot):
+    await state.set_state(Menus.main_menu)
+    await state.update_data(last_msg_id=None)
+    await destiny(call, state, bot)
