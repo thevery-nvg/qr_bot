@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 import cv2
-
+from loguru import logger
 
 def create_gradient(width, height, start_color, end_color):
     base = Image.new('RGB', (width, height), start_color)
@@ -27,7 +27,6 @@ def generate(qr_data, style_image):
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white").convert('RGBA')
-
     gradient = create_gradient(img.width, img.height, (255, 0, 0), (0, 0, 255))  # Красный -> Синий
     gradient.paste(img, (0, 0), img)  # Наложение QR-кода
 

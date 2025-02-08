@@ -22,6 +22,6 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info('Бот успешно остановлен вручную')
+        logger.info('Ручная остановка бота...')
     finally:
         logger.info('Бот успешно остановлен')
