@@ -6,6 +6,7 @@ from create_bot import dp, bot
 from handlers import router_main
 from loguru import logger
 
+
 def on_start_up() -> None:
     dp.include_router(router_main)
     logger.info("Бот успешно запущен")

@@ -39,12 +39,7 @@ def generate(qr_data, style_image):
 
     # Применение стиля
     stylized_image = \
-    hub_model(tf.constant(qr_image[np.newaxis, ...]), tf.constant(style_image[np.newaxis, ...]))[0]
+        hub_model(tf.constant(qr_image[np.newaxis, ...]),
+                  tf.constant(style_image[np.newaxis, ...]))[0]
 
-    detector = cv2.QRCodeDetector()
-    data, _, _ = detector.detectAndDecode(cv2.imread("stylized_qr.png"))
-    if data:
-        s = f"QR-код читаем! Данные:, {data}"
-    else:
-        s = "QR-код не читаем."
-    return s, stylized_image
+    return stylized_image

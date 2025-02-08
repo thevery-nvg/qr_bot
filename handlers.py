@@ -1,3 +1,4 @@
+import cv2
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -11,7 +12,7 @@ import io
 from loguru import logger
 from qr_generator import generate
 from states import Menus
-from buttons import *
+
 
 router_main = Router()
 
@@ -52,28 +53,26 @@ async def image(msg: Message, state: FSMContext, bot: Bot):
 
     try:
 
-        s, stylized_image = generate(prompt, style_image)
+        stylized_image = generate(prompt, style_image)
     except Exception as e:
         logger.error(f"Ошибка при генерации изображения: {e}")
         await msg.reply("Произошла ошибка при обработке изображения.")
         return
 
     result = Image.fromarray((stylized_image[0].numpy() * 255).astype(np.uint8))
-    # result.save("stylized_qr.png")
-    # photo = FSInputFile("stylized_qr.png")
 
+    img_np = np.array(result)
+    if img_np.shape[2] == 4:
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
+    else:
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    detector = cv2.QRCodeDetector()
+    data, _, _ = detector.detectAndDecode(img_np)
     image_stream = io.BytesIO()
     result.save(image_stream, format="PNG")  # Сохранение в формате PNG
     result.seek(0)
 
     input_file = BufferedInputFile(image_stream.getvalue(), filename="image.png")
-    await bot.send_photo(msg.from_user.id, input_file, caption=s)
+
+    await bot.send_photo(msg.from_user.id, input_file, caption=data if data else "qr is unreadable")
     await state.clear()
-
-
-@router_main.callback_query(F.data == RETURN_TO_MAIN_MENU_CB,
-                            StateFilter(any_state))
-async def return_to_main_menu(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Menus.main_menu)
-    await state.update_data(last_msg_id=None)
-    await main_menu(call, state)
